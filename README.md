@@ -15,6 +15,7 @@ In this project, I apply what I've learned on data modeling with Apache Cassandr
 * [Files in the Project](#files-in-the-project)
 * [Running the Project](#running-the-project)
 * [What I Have Learned](#what-i-have-learned)
+    - [Improvements First Review](#improvements-first-review)
 * [Author](#author)
 
 ## Project Dataset
@@ -53,9 +54,7 @@ Now, with Apache Cassandra I model the database tables to create queries for fol
 
 _Select artist, song title, song length from music_app_history where sessionId = 338 and itemInSession = 4_
 
-Does `sessionId` make a unique primary key by itself? Should it appear to repeat over different users, our query can return more than one song. This can be not the case for the current data set (I didn't check), but can be the case for another data set. I think it will be a more robust solution to include `userId` with the primary key. Since Query 1 is not including `userId`, it will be added as the last clustering column.
-
-> `PRIMARY KEY (session_id, item_in_session, user_id)`
+> `PRIMARY KEY (session_id, item_in_session)`
 
 ### Data Modeling for Query 2
 
@@ -63,7 +62,7 @@ _Select artist, song (sorted by itemInSession), user (first and last name) for u
 
 We need `itemInSession` as a clustering column for the sort order and to complete a unique primary key.
 
-> `PRIMARY KEY (user_id, session_id, item_in_session)`, note partition and clustering order difference from Query 1
+> `PRIMARY KEY ((user_id, session_id), item_in_session) WITH CLUSTERING ORDER BY (item_in_session DESC)`
 
 ### Data Modeling for Query 3
 
@@ -92,6 +91,15 @@ Through the implementation of this project, I've learned:
 1) The way partition and clustering columns work in Cassandra and how they impact on the results of my queries.
 2) Found that `COPY` command in Cassandra is a shell command, not CQL, so I cannot use it from `session.execute()`.
 3) The [tuple trick](https://stackoverflow.com/a/38090766) when a single parameter is passed into `session.execute()`.
+
+### Improvements First Review
+
+Following the first project review I made the following improvements and fixes:
+
+1) [Query 1](#data-modeling-for-query-1), removed clustering by `user_id`.
+1) [Query 2](#data-modeling-for-query-2), composite partition key `(user_id, session_id)` and descending clustering order by `item_in_session`.
+1) All queries, restructured [column order](https://docs.datastax.com/en/dse/5.1/cql/cql/cql_using/whereClustering.html).
+1) Restructured the markdown cells between the queries.
 
 ## Author
 
